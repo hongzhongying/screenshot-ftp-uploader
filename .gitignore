@@ -1,3 +1,14 @@
+# 忽略特定文件
+Dockerfile
+ubuntu-2204.appx
+folder_ftp_uploader.py
+screenshot_ftp_nanAn_thread_fix.py
+
+# 忽略中文目录
+新建文件夹/
+新建文件夹 (2)/
+考试神器/
+
 # Python
 __pycache__/
 *.py[cod]
@@ -19,6 +30,8 @@ wheels/
 *.egg-info/
 .installed.cfg
 *.egg
+
+# 环境文件
 .env
 .venv
 env/
@@ -27,21 +40,19 @@ ENV/
 env.bak/
 venv.bak/
 
+# IDE
+.idea/
+.vscode/
+*.spec
+
 # PyInstaller
 *.manifest
-*.spec
 build/
 dist/
 
 # Debian package
 *.deb
 deb_dist/
-
-# IDE
-.idea/
-.vscode/
-*.swp
-*.swo
 
 # Windows
 Thumbs.db
