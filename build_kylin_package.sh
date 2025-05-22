@@ -7,6 +7,9 @@ APP_DESCRIPTION="截图FTP上传工具 - 南安专用版"
 MAINTAINER="Admin <admin@example.com>"
 ARCHITECTURE="amd64"
 
+# 启用调试模式
+set -x
+
 # 清理旧的构建目录
 rm -rf build/ dist/
 rm -rf deb_dist/
@@ -25,10 +28,13 @@ mkdir -p deb_dist/$APP_NAME/usr/local/bin
 mkdir -p deb_dist/$APP_NAME/usr/share/applications
 mkdir -p deb_dist/$APP_NAME/usr/share/pixmaps
 mkdir -p deb_dist/$APP_NAME/usr/lib/python3/dist-packages
+mkdir -p deb_dist/$APP_NAME/usr/lib/x86_64-linux-gnu
 
 # 下载并打包依赖
 mkdir -p temp_deps
 cd temp_deps
+
+echo "开始下载依赖包..."
 
 # 下载必要的依赖包
 apt-get download \
@@ -45,21 +51,43 @@ apt-get download \
     libqt5widgets5 \
     libx11-6 \
     libxcb1 \
-    libxau6
+    libxau6 \
+    python3-pyqt5.qtcore \
+    python3-pyqt5.qtgui \
+    python3-pyqt5.qtwidgets \
+    libqt5dbus5 \
+    libqt5network5 \
+    libqt5printsupport5
 
+echo "下载的依赖包列表："
+ls -lh *.deb
+
+# 创建临时解压目录
+mkdir -p temp_extract
+
+echo "解压依赖包..."
 # 解压所有下载的deb包并复制库文件
 for deb in *.deb; do
     if [ -f "$deb" ]; then
+        echo "解压: $deb"
         dpkg-deb -x "$deb" temp_extract/
     fi
 done
 
+echo "复制依赖文件到目标目录..."
 # 复制所有Python包和库文件到deb包目录
-cp -r temp_extract/usr/lib/python3/* ../deb_dist/$APP_NAME/usr/lib/python3/dist-packages/ 2>/dev/null || true
-cp -r temp_extract/usr/lib/x86_64-linux-gnu/* ../deb_dist/$APP_NAME/usr/lib/ 2>/dev/null || true
+if [ -d "temp_extract/usr/lib/python3" ]; then
+    cp -r temp_extract/usr/lib/python3/* ../deb_dist/$APP_NAME/usr/lib/python3/dist-packages/ || echo "复制Python库失败"
+fi
+
+if [ -d "temp_extract/usr/lib/x86_64-linux-gnu" ]; then
+    cp -r temp_extract/usr/lib/x86_64-linux-gnu/* ../deb_dist/$APP_NAME/usr/lib/x86_64-linux-gnu/ || echo "复制系统库失败"
+fi
 
 cd ..
-rm -rf temp_deps
+
+echo "检查复制的文件..."
+find deb_dist/$APP_NAME/usr/lib -type f -exec ls -lh {} \;
 
 # 复制可执行文件
 cp dist/截图FTP上传工具 deb_dist/$APP_NAME/usr/local/bin/screenshot-ftp-uploader
@@ -116,6 +144,7 @@ fi
 
 # 设置Python库权限
 chmod -R 755 /usr/lib/python3/dist-packages
+chmod -R 755 /usr/lib/x86_64-linux-gnu
 
 exit 0
 EOF
@@ -137,6 +166,7 @@ exit 0
 EOF
 chmod +x deb_dist/$APP_NAME/DEBIAN/postrm
 
+echo "开始构建DEB包..."
 # 构建deb包
 cd deb_dist
 dpkg-deb --build $APP_NAME
@@ -144,4 +174,5 @@ dpkg-deb --build $APP_NAME
 # 移动deb包到项目根目录
 mv $APP_NAME.deb ../screenshot-ftp-uploader_kylin-v10_amd64.deb
 
-echo "构建完成! 生成的deb包: screenshot-ftp-uploader_kylin-v10_amd64.deb" 
+echo "构建完成! 生成的deb包: screenshot-ftp-uploader_kylin-v10_amd64.deb"
+ls -lh ../screenshot-ftp-uploader_kylin-v10_amd64.deb 
